@@ -2,5 +2,5 @@ POST localhost:8080/api/validate_chirp
 Content-Type: application/json
 
 {
-	"body": "hiadsfkljalksdfjlkasdjflk ad;jflkajsdf ;adslkfj aksldfj a;lksdf ;alksdjf alk;sdf a;lkdsjf a;lsdkfj ;alksdfj akls;fj alk;sdfj a;lksdjf lkasjdf ;laksdjf ;laksdj f;lksajd flkasjdf laseifjiaejf laisjd fdlkajd fkljasd fkjslkad fjilesjfl;saeifj laskjdf ;liasejfl; asijef leifj lsaiejf laskejfailsejf lasiejf asl;eifjasklejfa sl;eifj aslei:w::",
+	"body": "aa"
 }

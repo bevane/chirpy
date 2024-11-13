@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"strings"
 	"sync/atomic"
 )
 
@@ -63,45 +64,62 @@ func (cfg *apiConfig) validateChirpHandler(w http.ResponseWriter, req *http.Requ
 		Body string `json:"body"`
 	}
 
-	type returnError struct {
-		Error string `json:"error"`
-	}
-
-	type returnSuccess struct {
-		Valid bool `json:"valid"`
-	}
-
 	decoder := json.NewDecoder(req.Body)
 	params := parameters{}
-	var respBodyError returnError
-	var respBodySuccess returnSuccess
 	err := decoder.Decode(&params)
 	if err != nil {
-		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(500)
-		respBodyError = returnError{
-			Error: "Something went wrong",
-		}
-		dat, _ := json.Marshal(respBodyError)
-		w.Write(dat)
+		errorMsg := "Something went wrong"
+		respondWithError(w, 500, errorMsg)
 		return
 	}
 	if len(params.Body) > 140 {
-		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(400)
-		respBodyError = returnError{
-			Error: "Chirp is too long",
-		}
-		dat, _ := json.Marshal(respBodyError)
-		w.Write(dat)
+		errorMsg := "Chirp is too long"
+		respondWithError(w, 400, errorMsg)
 		return
 	}
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(200)
-	respBodySuccess = returnSuccess{
-		Valid: true,
+	cleanedText := cleanProfanity(params.Body)
+
+	type returnSuccess struct {
+		CleanedBody string `json:"cleaned_body"`
 	}
-	dat, _ := json.Marshal(respBodySuccess)
+	respBodySuccess := returnSuccess{
+		CleanedBody: cleanedText,
+	}
+	respondWithJSON(w, 200, respBodySuccess)
+	return
+}
+
+func respondWithError(w http.ResponseWriter, code int, msg string) {
+	type returnError struct {
+		Error string `json:"error"`
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(code)
+	respBodyError := returnError{
+		Error: msg,
+	}
+	dat, _ := json.Marshal(respBodyError)
 	w.Write(dat)
 	return
+
+}
+
+func respondWithJSON(w http.ResponseWriter, code int, payload interface{}) {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(code)
+	dat, _ := json.Marshal(payload)
+	w.Write(dat)
+	return
+
+}
+
+func cleanProfanity(text string) string {
+	words := strings.Split(text, " ")
+	for i := range words {
+		lowerWord := strings.ToLower(words[i])
+		if lowerWord == "kerfuffle" || lowerWord == "sharbert" || lowerWord == "fornax" {
+			words[i] = "****"
+		}
+	}
+	return strings.Join(words, " ")
 }
