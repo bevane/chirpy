@@ -1,6 +1,13 @@
-POST localhost:8080/api/validate_chirp
+### create user
+
+POST localhost:8080/api/users
 Content-Type: application/json
 
 {
-	"body": "aa"
+	"email": "bob@yahoo.com"
 }
+
+### delete users
+
+POST localhost:8080/admin/reset
+
