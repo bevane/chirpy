@@ -21,10 +21,6 @@ func (cfg *apiConfig) chirpsHandler(w http.ResponseWriter, req *http.Request) {
 		Body   string    `json:"body"`
 		UserID uuid.UUID `json:"user_id"`
 	}
-	type response struct {
-		Chirp
-	}
-
 	decoder := json.NewDecoder(req.Body)
 	params := parameters{}
 	err := decoder.Decode(&params)
@@ -48,17 +44,11 @@ func (cfg *apiConfig) chirpsHandler(w http.ResponseWriter, req *http.Request) {
 		respondWithError(w, http.StatusInternalServerError, errorMsg)
 		return
 	}
-	respondWithJSON(w, http.StatusCreated, response{
-		Chirp: Chirp(chirp),
-	})
+	respondWithJSON(w, http.StatusCreated, Chirp(chirp))
 	return
 }
 
 func (cfg *apiConfig) getChirpsHandler(w http.ResponseWriter, req *http.Request) {
-	type parameters struct {
-		Body   string    `json:"body"`
-		UserID uuid.UUID `json:"user_id"`
-	}
 	type response struct {
 		chirps []database.Chirp
 	}
@@ -74,5 +64,22 @@ func (cfg *apiConfig) getChirpsHandler(w http.ResponseWriter, req *http.Request)
 		JSONChirps = append(JSONChirps, Chirp(chirp))
 	}
 	respondWithJSON(w, http.StatusOK, JSONChirps)
+	return
+}
+
+func (cfg *apiConfig) getChirpSingleHandler(w http.ResponseWriter, req *http.Request) {
+	chirpID, err := uuid.Parse(req.PathValue("chirpID"))
+	if err != nil {
+		errorMsg := "Chirp not found"
+		respondWithError(w, http.StatusNotFound, errorMsg)
+		return
+	}
+	chirp, err := cfg.db.GetChirpByID(req.Context(), chirpID)
+	if err != nil {
+		errorMsg := "Chirp not found"
+		respondWithError(w, http.StatusNotFound, errorMsg)
+		return
+	}
+	respondWithJSON(w, http.StatusOK, Chirp(chirp))
 	return
 }
