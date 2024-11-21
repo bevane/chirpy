@@ -53,3 +53,26 @@ func (cfg *apiConfig) chirpsHandler(w http.ResponseWriter, req *http.Request) {
 	})
 	return
 }
+
+func (cfg *apiConfig) getChirpsHandler(w http.ResponseWriter, req *http.Request) {
+	type parameters struct {
+		Body   string    `json:"body"`
+		UserID uuid.UUID `json:"user_id"`
+	}
+	type response struct {
+		chirps []database.Chirp
+	}
+
+	chirps, err := cfg.db.GetChirps(req.Context())
+	if err != nil {
+		errorMsg := "Couldn't get chirps"
+		respondWithError(w, http.StatusInternalServerError, errorMsg)
+		return
+	}
+	var JSONChirps []Chirp
+	for _, chirp := range chirps {
+		JSONChirps = append(JSONChirps, Chirp(chirp))
+	}
+	respondWithJSON(w, http.StatusOK, JSONChirps)
+	return
+}
