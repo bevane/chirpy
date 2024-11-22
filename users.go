@@ -2,9 +2,12 @@ package main
 
 import (
 	"encoding/json"
-	"github.com/google/uuid"
 	"net/http"
 	"time"
+
+	auth "github.com/bevane/chirpy/internal"
+	"github.com/bevane/chirpy/internal/database"
+	"github.com/google/uuid"
 )
 
 type User struct {
@@ -16,12 +19,12 @@ type User struct {
 
 func (cfg *apiConfig) usersHandler(w http.ResponseWriter, req *http.Request) {
 	type parameters struct {
-		Email string `json:"email"`
+		Email    string `json:"email"`
+		Password string `json:"password"`
 	}
 	type response struct {
 		User
 	}
-
 	decoder := json.NewDecoder(req.Body)
 	params := parameters{}
 	err := decoder.Decode(&params)
@@ -30,7 +33,22 @@ func (cfg *apiConfig) usersHandler(w http.ResponseWriter, req *http.Request) {
 		respondWithError(w, http.StatusInternalServerError, errorMsg)
 		return
 	}
-	user, err := cfg.db.CreateUser(req.Context(), params.Email)
+	if params.Password == "" {
+		errorMsg := "Password cannot be empty"
+		respondWithError(w, http.StatusBadRequest, errorMsg)
+		return
+
+	}
+	hashedPassword, err := auth.HashPassword(params.Password)
+	if err != nil {
+		errorMsg := "Couldn't hash password"
+		respondWithError(w, http.StatusInternalServerError, errorMsg)
+		return
+	}
+	user, err := cfg.db.CreateUser(req.Context(), database.CreateUserParams{
+		Email:          params.Email,
+		HashedPassword: hashedPassword,
+	})
 	if err != nil {
 		errorMsg := "Couldn't create user"
 		respondWithError(w, http.StatusInternalServerError, errorMsg)
