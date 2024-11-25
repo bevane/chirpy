@@ -19,6 +19,7 @@ type apiConfig struct {
 }
 
 func main() {
+	port := "8080"
 	godotenv.Load()
 	dbURL := os.Getenv("DB_URL")
 	platform := os.Getenv("PLATFORM")
@@ -46,8 +47,9 @@ func main() {
 	serveMux.HandleFunc("GET /api/chirps/{chirpID}", apiCfg.getChirpSingleHandler)
 	serveMux.HandleFunc("POST /api/login", apiCfg.loginHandler)
 	server := &http.Server{
-		Addr:    ":8080",
+		Addr:    ":" + port,
 		Handler: serveMux,
 	}
+	fmt.Printf("Started server on localhost:%v\n", port)
 	server.ListenAndServe()
 }
