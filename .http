@@ -1,10 +1,12 @@
 ### create user
 
-POST localhost:8080/api/users
+POST localhost:8080/api/login
 Content-Type: application/json
 
 {
-	"email": "bob@yahoo.com"
+	"email": "bob@yahoo.com",
+	"password": "abcedf",
+	"expires_in_seconds": 1000
 }
 
 ### delete users

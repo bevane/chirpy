@@ -2,10 +2,12 @@ package main
 
 import (
 	"encoding/json"
-	"github.com/bevane/chirpy/internal/database"
-	"github.com/google/uuid"
 	"net/http"
 	"time"
+
+	auth "github.com/bevane/chirpy/internal"
+	"github.com/bevane/chirpy/internal/database"
+	"github.com/google/uuid"
 )
 
 type Chirp struct {
@@ -18,12 +20,21 @@ type Chirp struct {
 
 func (cfg *apiConfig) chirpsHandler(w http.ResponseWriter, req *http.Request) {
 	type parameters struct {
-		Body   string    `json:"body"`
-		UserID uuid.UUID `json:"user_id"`
+		Body string `json:"body"`
+	}
+	token, err := auth.GetBearerToken(req.Header)
+	if err != nil {
+		respondWithError(w, http.StatusUnauthorized, err.Error())
+		return
+	}
+	userID, err := auth.ValidateJWT(token, cfg.jwtSecret)
+	if err != nil {
+		respondWithError(w, http.StatusUnauthorized, err.Error())
+		return
 	}
 	decoder := json.NewDecoder(req.Body)
 	params := parameters{}
-	err := decoder.Decode(&params)
+	err = decoder.Decode(&params)
 	if err != nil {
 		errorMsg := "Couldn't decode parameters"
 		respondWithError(w, http.StatusInternalServerError, errorMsg)
@@ -37,7 +48,7 @@ func (cfg *apiConfig) chirpsHandler(w http.ResponseWriter, req *http.Request) {
 	cleanedText := cleanProfanity(params.Body)
 	chirp, err := cfg.db.CreateChirp(req.Context(), database.CreateChirpParams{
 		Body:   cleanedText,
-		UserID: params.UserID,
+		UserID: userID,
 	})
 	if err != nil {
 		errorMsg := "Couldn't create chirp"
