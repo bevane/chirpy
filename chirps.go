@@ -2,12 +2,11 @@ package main
 
 import (
 	"encoding/json"
-	"net/http"
-	"time"
-
 	auth "github.com/bevane/chirpy/internal"
 	"github.com/bevane/chirpy/internal/database"
 	"github.com/google/uuid"
+	"net/http"
+	"time"
 )
 
 type Chirp struct {

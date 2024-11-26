@@ -13,3 +13,11 @@ Content-Type: application/json
 
 POST localhost:8080/admin/reset
 
+### get chirp invalid token
+
+POST localhost:8080/api/chirps
+Authorization: "Bearer ${saulRefreshToken}",
+Content-Type: application/json
+{
+  "body": "Let’s just say I know a guy... who knows a guy... who knows another guy."
+}
