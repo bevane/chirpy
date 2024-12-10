@@ -45,6 +45,7 @@ func main() {
 	serveMux.HandleFunc("POST /admin/reset", apiCfg.resetHandler)
 	serveMux.HandleFunc("POST /api/validate_chirp", apiCfg.validateChirpHandler)
 	serveMux.HandleFunc("POST /api/users", apiCfg.usersHandler)
+	serveMux.HandleFunc("PUT /api/users", apiCfg.updateUserHandler)
 	serveMux.HandleFunc("POST /api/chirps", apiCfg.chirpsHandler)
 	serveMux.HandleFunc("GET /api/chirps", apiCfg.getChirpsHandler)
 	serveMux.HandleFunc("GET /api/chirps/{chirpID}", apiCfg.getChirpSingleHandler)
