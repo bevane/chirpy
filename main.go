@@ -17,6 +17,7 @@ type apiConfig struct {
 	db             *database.Queries
 	platform       string
 	jwtSecret      string
+	polkaKey       string
 }
 
 func main() {
@@ -24,6 +25,7 @@ func main() {
 	godotenv.Load()
 	dbURL := os.Getenv("DB_URL")
 	JWTSecret := os.Getenv("JWT_SECRET")
+	polkaKey := os.Getenv("POLKA_KEY")
 	platform := os.Getenv("PLATFORM")
 	db, err := sql.Open("postgres", dbURL)
 	if err != nil {
@@ -36,6 +38,7 @@ func main() {
 		db:             dbQueries,
 		platform:       platform,
 		jwtSecret:      JWTSecret,
+		polkaKey:       polkaKey,
 	}
 	serveMux := http.NewServeMux()
 	fileHandler := http.StripPrefix("/app/", http.FileServer(http.Dir(".")))
@@ -53,6 +56,7 @@ func main() {
 	serveMux.HandleFunc("POST /api/login", apiCfg.loginHandler)
 	serveMux.HandleFunc("POST /api/refresh", apiCfg.refreshHandler)
 	serveMux.HandleFunc("POST /api/revoke", apiCfg.revokeHandler)
+	serveMux.HandleFunc("POST /api/polka/webhooks", apiCfg.polkaWebhookHandler)
 	server := &http.Server{
 		Addr:    ":" + port,
 		Handler: serveMux,
