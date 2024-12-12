@@ -62,16 +62,48 @@ func (cfg *apiConfig) getChirpsHandler(w http.ResponseWriter, req *http.Request)
 	type response struct {
 		chirps []database.Chirp
 	}
-
-	chirps, err := cfg.db.GetChirps(req.Context())
-	if err != nil {
-		errorMsg := "Couldn't get chirps"
-		respondWithError(w, http.StatusInternalServerError, errorMsg)
+	var chirps []database.Chirp
+	var reverseSort bool
+	var err error
+	if sortStr := req.URL.Query().Get("sort"); sortStr == "desc" {
+		reverseSort = true
+	} else if sortStr == "" || sortStr == "asc" {
+		reverseSort = false
+	} else {
+		errorMsg := "sort paramter not valid"
+		respondWithError(w, http.StatusBadRequest, errorMsg)
 		return
 	}
+	if userIDstr := req.URL.Query().Get("author_id"); userIDstr != "" {
+		userID, err := uuid.Parse(userIDstr)
+		if err != nil {
+			errorMsg := "author_id not a valid uuid"
+			respondWithError(w, http.StatusBadRequest, errorMsg)
+			return
+		}
+		chirps, err = cfg.db.GetChirpsByUserID(req.Context(), userID)
+		if err != nil {
+			errorMsg := "unable to chirps by author"
+			respondWithError(w, http.StatusInternalServerError, errorMsg)
+			return
+		}
+	} else {
+		chirps, err = cfg.db.GetChirps(req.Context())
+		if err != nil {
+			errorMsg := "Couldn't get chirps"
+			respondWithError(w, http.StatusInternalServerError, errorMsg)
+			return
+		}
+	}
 	var JSONChirps []Chirp
-	for _, chirp := range chirps {
-		JSONChirps = append(JSONChirps, Chirp(chirp))
+	if reverseSort {
+		for i := len(chirps) - 1; i >= 0; i-- {
+			JSONChirps = append(JSONChirps, Chirp(chirps[i]))
+		}
+	} else {
+		for _, chirp := range chirps {
+			JSONChirps = append(JSONChirps, Chirp(chirp))
+		}
 	}
 	respondWithJSON(w, http.StatusOK, JSONChirps)
 	return
