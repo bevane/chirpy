@@ -21,7 +21,10 @@ type apiConfig struct {
 }
 
 func main() {
-	port := "8080"
+	// use PORT before godotenv load because of the docker course
+	// so the PORT will be gotten from environment variable instead of
+	// env file
+	port := os.Getenv("PORT")
 	godotenv.Load()
 	dbURL := os.Getenv("DB_URL")
 	JWTSecret := os.Getenv("JWT_SECRET")
